@@ -5,7 +5,7 @@ export default function HomePage() {
   const [cartCount, setCartCount] = useState(0);
 
   // REPLACE THIS with your real Stripe link from the dashboard
-  const STRIPE_LINK = "https://buy.stripe.com/your_real_link_here";
+  const STRIPE_LINK = "https://buy.stripe.com/28EcN55WF9W3cejdiObII00";
 
   const handleCheckout = () => {
     if (cartCount > 0) {
