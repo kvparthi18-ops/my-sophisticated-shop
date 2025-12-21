@@ -31,7 +31,7 @@ export default function HomePage() {
     });
   };
 
-  const totalItems = Object.values(cart).reduce((sum: any, item: any) => sum + item.quantity, 0);
+ const totalItems = Object.values(cart).reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
 
   const handleCheckout = async () => {
     try {
@@ -70,7 +70,7 @@ export default function HomePage() {
               <img 
                 src={p.img} 
                 alt={p.name} 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                className="w-full h-full object-cover transition-all duration-500"
               />
             </div>
             
