@@ -9,29 +9,26 @@ export async function POST(req: Request) {
   try {
     const cartItems = await req.json();
     
-    // Map cart items to Stripe format with safety checks
-    const line_items = Object.values(cartItems).map((item: any) => {
-      if (!item.price || !item.name) {
-        throw new Error(`Missing data for item: ${item.name || 'Unknown'}`);
-      }
+    // 1. Calculate subtotal in the backend for security
+    const subtotal = Object.values(cartItems).reduce((sum: number, item: any) => 
+      sum + (item.price * item.quantity), 0
+    );
 
-      return {
-        price_data: {
-          currency: 'usd',
-          product_data: { 
-            name: item.name,
-            // If images fail, Stripe crashes. We wrap it in a check.
-            images: item.img ? [item.img] : [],
-          },
-          unit_amount: item.price,
+    const line_items = Object.values(cartItems).map((item: any) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: { 
+          name: item.size ? `${item.name} - Size: ${item.size}` : item.name,
+          images: item.img ? [item.img] : [],
         },
-        quantity: item.quantity,
-        adjustable_quantity: {
-          enabled: true,
-          minimum: 1,
-        },
-      };
-    });
+        unit_amount: item.price,
+      },
+      quantity: item.quantity,
+      adjustable_quantity: {
+        enabled: true,
+        minimum: 1,
+      },
+    }));
 
     if (line_items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -43,16 +40,36 @@ export async function POST(req: Request) {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/success`,
       cancel_url: `${req.headers.get('origin')}/`,
+      allow_promotion_codes: true,
+      automatic_tax: { enabled: true },
       billing_address_collection: 'required',
+      
+      // 2. Dynamic Shipping Rates
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB'],
       },
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: {
+              // If subtotal >= $200, charge 0. Otherwise, charge $15.
+              amount: subtotal >= 20000 ? 0 : 1500, 
+              currency: 'usd',
+            },
+            display_name: subtotal >= 20000 ? 'Free Shipping' : 'Standard Shipping',
+            delivery_estimate: {
+              minimum: { unit: 'business_day', value: 3 },
+              maximum: { unit: 'business_day', value: 5 },
+            },
+          },
+        },
+      ],
     });
 
     return NextResponse.json({ url: session.url });
 
   } catch (err: any) {
-    // THIS IS KEY: Check your VS Code Terminal to see this message
     console.error("STRIPE ERROR:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
