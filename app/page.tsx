@@ -1,55 +1,70 @@
-'use client'; // Add this at the top
-import './globals.css';
-import { Inter } from 'next/font/google';
-import CartDrawer from './components/CartDrawer';
-import Link from 'next/link';
-import { ShoppingBag } from 'lucide-react';
-import { useCart } from '@/lib/store'; // Import the store
+// app/page.tsx
+import ProductCard from '@/components/ProductCard'; 
+import OrderTracking from '@/components/OrderTracking'; // Assuming you saved the previous component
 
-const inter = Inter({ subsets: ['latin'] });
+const products = [
+  {
+    id: '1',
+    name: 'Signature Vase',
+    price: 12000, // $120.00 in Cents Standard
+    image: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?q=80&w=2000&auto=format&fit=crop',
+    description: 'Hand-crafted ceramic vase with a matte finish.'
+  },
+  {
+    id: '2',
+    name: 'Minimalist Studio Chair',
+    price: 45000, // $450.00 in Cents Standard
+    image: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?q=80&w=2000&auto=format&fit=crop',
+    description: 'Ergonomic wooden chair designed for the modern studio.'
+  },
+  {
+    id: '3',
+    name: 'Brutalist Lamp',
+    price: 8500, // $85.00 in Cents Standard
+    image: 'https://images.unsplash.com/photo-1507473885765-e6ed657f9971?q=80&w=2000&auto=format&fit=crop',
+    description: 'Raw concrete texture with warm ambient glow.'
+  }
+];
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const items = useCart((state) => state.items);
-  const openCart = useCart((state) => state.openCart);
-  
-  // Calculate total quantity of all items combined
-  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
-
+export default function Home() {
   return (
-    <html lang="en">
-      <body className={`${inter.className} antialiased`}>
-        <nav className="fixed top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="text-xl font-light tracking-widest uppercase">
-              Zury Collections
-            </Link>
-            
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-sm font-medium hover:opacity-50 transition-opacity">Shop</Link>
-              
-              {/* Cart Button with Badge */}
-              <button 
-                onClick={openCart}
-                className="relative p-2 hover:bg-gray-50 rounded-full transition-colors"
-              >
-                <ShoppingBag size={20} />
-                
-                {itemCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-black text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full animate-in zoom-in">
-                    {itemCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </nav>
+    <main className="min-h-screen bg-white">
+      {/* 1. Global Announcement Bar */}
+      <div className="bg-black text-white py-3 text-center">
+        <p className="text-[9px] uppercase tracking-[0.3em] font-black italic">
+          Complimentary shipping on all studio orders over $200
+        </p>
+      </div>
 
-        <div className="pt-16">
-          {children}
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        {/* 2. Hero Header */}
+        <header className="mb-24 text-center">
+          <h1 className="text-6xl font-black italic tracking-tighter uppercase mb-6">
+            Zury Collections
+          </h1>
+          <div className="h-[1px] w-12 bg-black mx-auto mb-6" />
+          <p className="text-gray-400 max-w-sm mx-auto uppercase text-[10px] tracking-[0.4em] leading-relaxed">
+            Curated Objects <span className="text-black/20 mx-2">/</span> Timeless Design <span className="text-black/20 mx-2">/</span> Studio Essentials
+          </p>
+        </header>
+
+        {/* 3. Product Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-20">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
+      </div>
 
-        <CartDrawer />
-      </body>
-    </html>
+      {/* 4. Order Tracking Section */}
+      <OrderTracking />
+
+      {/* 5. Minimal Footer */}
+      <footer className="py-12 border-t border-gray-50 text-center">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-300">
+          © 2026 Zury Studio — All Rights Reserved
+        </p>
+      </footer>
+    </main>
   );
 }

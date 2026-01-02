@@ -7,44 +7,42 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const cartItems = await req.json();
+    // The body contains { items: [...] } from our handleCheckout function
+    const { items } = await req.json();
+
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    }
     
-    // 1. Calculate subtotal in the backend for security
-    const subtotal = Object.values(cartItems).reduce((sum: number, item: any) => 
+    // 1. Calculate subtotal for shipping logic (values in cents)
+    const subtotal = items.reduce((sum: number, item: any) => 
       sum + (item.price * item.quantity), 0
     );
 
-    const line_items = Object.values(cartItems).map((item: any) => ({
+    // 2. Map frontend items to Stripe line items
+    const line_items = items.map((item: any) => ({
       price_data: {
         currency: 'usd',
         product_data: { 
-          name: item.size ? `${item.name} - Size: ${item.size}` : item.name,
-          images: item.img ? [item.img] : [],
+          name: item.name,
+          images: item.image ? [item.image] : [], // Matches 'item.image' from your store
         },
         unit_amount: item.price,
       },
       quantity: item.quantity,
-      adjustable_quantity: {
-        enabled: true,
-        minimum: 1,
-      },
     }));
 
-    if (line_items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-    }
-
+    // 3. Create Stripe Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/success`,
-      cancel_url: `${req.headers.get('origin')}/`,
+      cancel_url: `${req.headers.get('origin')}/checkout`,
       allow_promotion_codes: true,
       automatic_tax: { enabled: true },
       billing_address_collection: 'required',
       
-      // 2. Dynamic Shipping Rates
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB'],
       },
@@ -53,11 +51,11 @@ export async function POST(req: Request) {
           shipping_rate_data: {
             type: 'fixed_amount',
             fixed_amount: {
-              // If subtotal >= $200, charge 0. Otherwise, charge $15.
+              // Threshold: $200.00 (20000 cents)
               amount: subtotal >= 20000 ? 0 : 1500, 
               currency: 'usd',
             },
-            display_name: subtotal >= 20000 ? 'Free Shipping' : 'Standard Shipping',
+            display_name: subtotal >= 20000 ? 'Complimentary Shipping' : 'Standard Shipping',
             delivery_estimate: {
               minimum: { unit: 'business_day', value: 3 },
               maximum: { unit: 'business_day', value: 5 },
