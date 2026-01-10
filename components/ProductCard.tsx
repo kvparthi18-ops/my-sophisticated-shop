@@ -1,19 +1,19 @@
 'use client';
 
 import { useCart } from '@/lib/store';
-import { useState, useTransition } from 'react'; // Added useTransition
+import { useState, useTransition } from 'react';
 import { Heart } from 'lucide-react';
-import { useUser, useSignIn } from '@clerk/nextjs';
-import { toggleWishlistAction } from '@/app/actions/wishlist'; // Import our new action
+import { useUser, useClerk } from '@clerk/nextjs'; // Changed useSignIn to useClerk
+import { toggleWishlistAction } from '@/app/actions/wishlist';
 
 export default function ProductCard({ product }: { product: any }) {
   const addItem = useCart((state) => state.addItem);
   const [isAdding, setIsAdding] = useState(false);
-  const [isPending, startTransition] = useTransition(); // Handle database loading state
+  const [isPending, startTransition] = useTransition();
   const [isWishlisted, setIsWishlisted] = useState(false); 
 
   const { isSignedIn } = useUser();
-  const { openSignIn } = useSignIn();
+  const { openSignIn } = useClerk(); // useClerk provides the openSignIn method
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -25,14 +25,14 @@ export default function ProductCard({ product }: { product: any }) {
     e.preventDefault();
     
     if (!isSignedIn) {
+      // Now this call will match the TypeScript type
       return openSignIn();
     }
 
-    // This runs the server action and manages the loading state automatically
     startTransition(async () => {
       try {
         await toggleWishlistAction(product.id);
-        setIsWishlisted(!isWishlisted); // Toggle UI state on success
+        setIsWishlisted(!isWishlisted);
       } catch (error) {
         console.error("Failed to update wishlist:", error);
       }
@@ -48,10 +48,9 @@ export default function ProductCard({ product }: { product: any }) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
         />
 
-        {/* WISHLIST BUTTON */}
         <button 
           onClick={handleWishlist}
-          disabled={isPending} // Disable button while saving to DB
+          disabled={isPending}
           className={`absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-all z-10 ${
             isPending ? "opacity-50 cursor-not-allowed" : "opacity-100"
           }`}
@@ -60,7 +59,7 @@ export default function ProductCard({ product }: { product: any }) {
             size={16} 
             className={`transition-colors ${
               isWishlisted ? "fill-black stroke-black" : "stroke-gray-400"
-            } ${isPending ? "animate-pulse" : ""}`} // Add pulse animation while loading
+            } ${isPending ? "animate-pulse" : ""}`}
           />
         </button>
       </div>
