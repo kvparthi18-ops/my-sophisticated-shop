@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL IS GONE FROM HERE IN PRISMA 7
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    String   
+  productId String   
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}

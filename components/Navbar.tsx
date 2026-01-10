@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/store';
 import { useEffect, useState } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 export default function Navbar() {
   const items = useCart((state) => state.items);
@@ -23,7 +24,30 @@ export default function Navbar() {
         </Link>
         
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium hover:opacity-50 transition-opacity">Shop</Link>
+          <Link href="/" className="text-sm font-medium hover:opacity-50 transition-opacity">
+            Shop
+          </Link>
+
+          {/* CLERK AUTH INTEGRATION */}
+          <div className="flex items-center">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="text-sm font-medium hover:opacity-50 transition-opacity uppercase tracking-wider">
+                  Login
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "h-8 w-8"
+                  }
+                }}
+              />
+            </SignedIn>
+          </div>
+
           <button onClick={openCart} className="relative p-2 hover:bg-gray-50 rounded-full transition-colors">
             <ShoppingBag size={20} />
             {mounted && itemCount > 0 && (
