@@ -16,13 +16,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Explicitly grab the key to ensure it's available during build/prerendering
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
+    throw new Error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables.");
+  }
+
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <html lang="en">
         <body className={`${inter.className} antialiased`}>
-          {/* The Navbar now contains the SignIn/UserButton logic, 
-              so we keep this layout clean and focused on structure.
-          */}
           <Navbar />
           
           <main>
