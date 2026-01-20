@@ -1,53 +1,74 @@
-import { create } from 'zustand';
+'use client'
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
+import { create } from 'zustand'
+
+type CartItem = {
+  id: string
+  name: string
+  price: number
+  image: string
+  quantity: number
 }
 
-interface CartStore {
-  items: CartItem[];
-  isOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
-  addItem: (product: any) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, qty: number) => void;
-  clearCart: () => void; // 1. Added to interface
+type CartStore = {
+  items: CartItem[]
+  isOpen: boolean
+  addItem: (item: Omit<CartItem, 'quantity'>) => void
+  removeItem: (id: string) => void
+  openCart: () => void
+  closeCart: () => void
 }
 
 export const useCart = create<CartStore>((set) => ({
   items: [],
   isOpen: false,
-  openCart: () => set({ isOpen: true }),
-  closeCart: () => set({ isOpen: false }),
-  
-  addItem: (product) => set((state) => {
-    const existing = state.items.find((i) => i.id === product.id);
-    if (existing) {
-      return { 
-        items: state.items.map((i) => 
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        ), 
-        isOpen: true 
-      };
-    }
-    return { items: [...state.items, { ...product, quantity: 1 }], isOpen: true };
-  }),
 
-  removeItem: (id) => set((state) => ({
-    items: state.items.filter((i) => i.id !== id)
-  })),
+  // ✅ ADD OR INCREMENT
+  addItem: (item) =>
+    set((state) => {
+      const existing = state.items.find((i) => i.id === item.id)
 
-  updateQuantity: (id, qty) => set((state) => ({
-    items: state.items.map((i) => 
-      i.id === id ? { ...i, quantity: Math.max(1, qty) } : i
-    )
-  })),
+      if (existing) {
+        return {
+          ...state,
+          items: state.items.map((i) =>
+            i.id === item.id
+              ? { ...i, quantity: i.quantity + 1 }
+              : i
+          ),
+        }
+      }
 
-  // 2. Added the actual logic to empty the items array
-  clearCart: () => set({ items: [] }), 
-}));
+      return {
+        ...state,
+        items: [...state.items, { ...item, quantity: 1 }],
+      }
+    }),
+
+  // ✅ DECREMENT OR REMOVE
+  removeItem: (id) =>
+    set((state) => {
+      const existing = state.items.find((i) => i.id === id)
+      if (!existing) return state
+
+      if (existing.quantity === 1) {
+        return {
+          ...state,
+          items: state.items.filter((i) => i.id !== id),
+        }
+      }
+
+      return {
+        ...state,
+        items: state.items.map((i) =>
+          i.id === id
+            ? { ...i, quantity: i.quantity - 1 }
+            : i
+        ),
+      }
+    }),
+
+  openCart: () => set((state) => ({ ...state, isOpen: true })),
+  closeCart: () => set((state) => ({ ...state, isOpen: false })),
+}))
+

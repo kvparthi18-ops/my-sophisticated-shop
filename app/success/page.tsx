@@ -23,7 +23,7 @@ export default function SuccessPage() {
       </h1>
       
       <p className="text-gray-500 text-sm max-w-xs mb-8">
-        Thank you for your order. We’ve sent a confirmation email to your inbox and started preparing your STUDIO pieces.
+        Thank you for your order. 
       </p>
 
       <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -43,7 +43,8 @@ export default function SuccessPage() {
       </div>
 
       <footer className="mt-12 text-[10px] text-gray-400 uppercase tracking-widest">
-        STUDIO — Order Support: support@studio.com
+        Zury Collections - Order Support: support@zurycollections.com
+
       </footer>
     </main>
   );
